@@ -1,0 +1,11 @@
+# Rename to backend.conf and pass to: terraform init -backend-config="backend.conf"
+# The storage account should be created out-of-band (bootstrapped separately)
+# and locked down with its own access controls.
+
+resource_group_name  = "rg-terraform-state-prod"
+storage_account_name = "sttfstatecontosoxx"   # Must be globally unique, no hyphens
+container_name       = "tfstate-observability"
+key                  = "observability/prod/terraform.tfstate"
+
+# Use Entra ID (AAD) auth instead of storage account keys — no shared secrets
+use_azuread_auth = true

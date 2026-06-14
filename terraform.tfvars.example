@@ -1,0 +1,85 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars to source control — use a secrets manager
+# (Azure Key Vault, HashiCorp Vault) or CI/CD variable store instead.
+
+# ─────────────────────────────────────────
+# Subscription / tenant
+# ─────────────────────────────────────────
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+# ─────────────────────────────────────────
+# Location / environment
+# ─────────────────────────────────────────
+location    = "westeurope"
+environment = "prod"
+
+extra_tags = {
+  owner        = "platform-team"
+  business_unit = "engineering"
+}
+
+# ─────────────────────────────────────────
+# Platform cluster
+# ─────────────────────────────────────────
+platform_resource_group_name    = "rg-observability-platform-prod"
+cluster_name                    = "lac-observability-prod"
+cluster_capacity_reservation_gb = 100   # Minimum: 100 GB/day; review monthly and adjust
+platform_workspace_name         = "law-platform-prod"
+default_retention_in_days       = 90
+
+# ─────────────────────────────────────────
+# Key Vault / CMK
+# key_vault_name must be globally unique, 3–24 chars
+# ─────────────────────────────────────────
+key_vault_name     = "kv-law-cmk-contoso-prod"
+key_vault_key_name = "log-analytics-cmk"
+key_expiry_days    = 365
+
+# Private endpoint recommended for production.
+# Set to true only for initial bootstrap without private connectivity.
+key_vault_public_network_access_enabled = false
+
+# Leave empty when public access is disabled
+key_vault_allowed_ips = []
+
+# Provide when private endpoint is required:
+key_vault_private_endpoint_subnet_id  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network-prod/providers/Microsoft.Network/virtualNetworks/vnet-prod/subnets/snet-private-endpoints"
+private_dns_zone_resource_group_name  = "rg-dns-prod"
+
+# ─────────────────────────────────────────
+# Consumers
+# Replace <object-id-...> with real AAD group or user object IDs.
+# Prefer AAD security groups over individual user IDs for easier lifecycle management.
+# ─────────────────────────────────────────
+consumers = {
+  "team-alpha" = {
+    retention_in_days      = 90
+    workspace_contributors = ["<object-id-of-team-alpha-devops-sg>"]
+    workspace_readers      = ["<object-id-of-team-alpha-developers-sg>"]
+    extra_tags = {
+      cost_center  = "alpha-001"
+      team         = "Alpha"
+    }
+  }
+
+  "team-beta" = {
+    retention_in_days      = 180   # Regulatory requirement for this team
+    workspace_contributors = ["<object-id-of-team-beta-sre-sg>"]
+    workspace_readers      = ["<object-id-of-team-beta-devs-sg>", "<object-id-of-team-beta-pm-sg>"]
+    extra_tags = {
+      cost_center = "beta-002"
+      team        = "Beta"
+    }
+  }
+
+  "team-gamma" = {
+    retention_in_days      = 30    # Short retention for non-sensitive ephemeral workloads
+    workspace_contributors = ["<object-id-of-team-gamma-pipeline-sp>"]
+    workspace_readers      = []
+    extra_tags = {
+      cost_center = "gamma-003"
+      team        = "Gamma"
+    }
+  }
+}
